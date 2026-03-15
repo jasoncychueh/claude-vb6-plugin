@@ -1,0 +1,9 @@
+{
+  "name": "vb6-project",
+  "version": "1.0.0",
+  "description": "Big5 encoding protection for VB6 projects. Transparent Big5↔UTF-8 conversion via hooks on Read/Edit/Write tools, .frm format auto-fix, compile helpers, and safety nets (SessionEnd, git pre-commit, compile.bat).",
+  "author": {
+    "name": "Jason Chueh",
+    "email": "jasoncychueh@gmail.com"
+  }
+}

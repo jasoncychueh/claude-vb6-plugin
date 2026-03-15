@@ -1,0 +1,15 @@
+#!/bin/bash
+# Git pre-commit hook: restore any pending Big5 files before committing.
+# Install: cp .claude/plugins/local/vb6-project/scripts/git-pre-commit .git/hooks/pre-commit
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+RESTORE_SCRIPT="$REPO_ROOT/.claude/plugins/local/vb6-project/hooks/scripts/vb6_restore.py"
+
+if [ -f "$RESTORE_SCRIPT" ]; then
+    RESTORED=$(python "$RESTORE_SCRIPT" "$REPO_ROOT" 2>&1)
+    if [ -n "$RESTORED" ]; then
+        echo "[vb6-hook] $RESTORED"
+        echo "[vb6-hook] Files were restored to Big5. Please re-stage and commit again."
+        exit 1
+    fi
+fi
