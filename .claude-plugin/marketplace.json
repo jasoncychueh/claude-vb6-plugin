@@ -10,7 +10,7 @@
       "name": "vb6-project",
       "description": "Transparent ANSI encoding protection for VB6 projects. Auto-converts Big5/Shift-JIS/GBK files on Read/Edit/Write, .frm format auto-fix, compile helpers, and safety nets.",
       "version": "1.0.0",
-      "source": ".",
+      "source": "./",
       "author": {
         "name": "Jason Chueh",
         "email": "jasoncychueh@gmail.com"
