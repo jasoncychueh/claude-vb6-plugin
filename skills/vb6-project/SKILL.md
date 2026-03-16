@@ -113,13 +113,9 @@ file Source/modified_file.bas
 
 ## Compiling
 
-Use the project's own `compile.bat` if it has one, or the plugin's bundled version:
+Use the plugin's bundled `compile.bat`:
 
 ```bash
-# If the project has its own compile.bat (preferred)
-cmd.exe //c "cd /d <PROJECT_DIR> && <PROJECT_DIR>\compile.bat <PROJECT>.vbp"
-
-# Or using the plugin's bundled compile.bat
 cmd.exe //c "cd /d <PROJECT_DIR> && ${CLAUDE_PLUGIN_ROOT}\scripts\compile.bat <PROJECT>.vbp"
 ```
 
@@ -144,7 +140,9 @@ For `.bas` and `.cls` files, the line number is counted from `Attribute VB_Name`
 VB6 uses `.rc` resource files (STRINGTABLE) for UI strings, compiled into `.RES` binary.
 The `.rc` files are also ANSI encoded — Edit tool works safely on them (protected by hooks).
 
-To recompile after editing `.rc` files:
+**Auto-compile rule:** If the `.vbp` contains a `ResFile32=` entry, check whether the referenced `.RES` file is missing or older than its corresponding `.rc` source. If so, compile the `.rc` before compiling the `.vbp`. VB6 links the `.RES` at compile time — a stale or missing `.RES` means the binary will have outdated or missing resource strings.
+
+To compile `.rc` files:
 
 ```bash
 cmd.exe //c "${CLAUDE_PLUGIN_ROOT}\scripts\compile_rc.bat \"<PROJECT_DIR>\Source\Resource\<main>.rc\""
