@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""PreToolUse hook for Read: convert VB6 files from native encoding to UTF-8 before Read."""
+"""PreToolUse hook for Edit: convert VB6 files from native encoding to UTF-8 before Edit."""
 import sys
 import json
 import os
@@ -10,7 +10,7 @@ from vb6_config import get_encoding, is_vb6_file, is_native_encoded
 
 def main():
     data = json.load(sys.stdin)
-    if data.get('tool_name') != 'Read':
+    if data.get('tool_name') != 'Edit':
         return
 
     file_path = data.get('tool_input', {}).get('file_path', '')
@@ -32,7 +32,7 @@ def main():
 
     except Exception as e:
         print(json.dumps({
-            "systemMessage": f"[vb6-hook] {enc}→UTF-8 pre-read failed: {e}"
+            "systemMessage": f"[vb6-hook] {enc}→UTF-8 pre-edit failed: {e}"
         }))
         sys.exit(2)
 

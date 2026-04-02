@@ -1,61 +1,54 @@
 #!/usr/bin/env python
-"""Restore all pending files that were temporarily converted to UTF-8.
+"""Safety net: scan for VB6 files stuck in UTF-8 and restore to native encoding.
 
-Scans for .__vb6_encoding_pending__ marker files and converts the corresponding
-files back from UTF-8 to their native encoding + CRLF.
-
-The marker file contains the encoding name (e.g., 'big5', 'shift_jis').
+No longer relies on marker files. Scans Source/ for VB6 files that are UTF-8
+and converts them back.
 
 Can be called from:
-- SessionEnd hook (Claude Code session ends)
 - git pre-commit hook (before committing)
 - compile.bat (before compiling)
-- Command line directly: python big5_restore.py [search_dir]
+- Command line directly: python vb6_restore.py [search_dir]
 """
 import os
 import sys
 import glob
+import subprocess
+
+sys.path.insert(0, os.path.dirname(__file__))
+from vb6_config import get_encoding, VB6_EXTENSIONS
 
 
-def restore_file(file_path, marker_path):
-    """Convert a single file from UTF-8 back to native encoding + CRLF."""
+def is_utf8(file_path):
     try:
-        # Read encoding from marker
-        with open(marker_path, 'r') as f:
-            enc = f.read().strip() or 'big5'
-
-        with open(file_path, 'r', encoding='utf-8') as f:
-            text = f.read()
-
-        text = text.replace('\r\n', '\n').replace('\n', '\r\n')
-
-        with open(file_path, 'wb') as f:
-            f.write(text.encode(enc))
-
-        os.remove(marker_path)
-        return True
-    except Exception as e:
-        print(f'ERROR: Failed to restore {file_path}: {e}', file=sys.stderr)
+        result = subprocess.run(['file', file_path], capture_output=True, text=True)
+        return 'UTF-8' in result.stdout
+    except:
         return False
 
 
 def restore_all(search_dir='.'):
-    """Find and restore all pending files."""
-    pattern = os.path.join(search_dir, '**', '*.__vb6_encoding_pending__')
-    markers = glob.glob(pattern, recursive=True)
-
-    if not markers:
-        return 0
-
+    """Find and restore all VB6 files stuck in UTF-8."""
+    enc = get_encoding()
     restored = 0
-    for marker_path in markers:
-        file_path = marker_path.replace('.__vb6_encoding_pending__', '')
-        if os.path.isfile(file_path):
-            if restore_file(file_path, marker_path):
-                print(f'Restored: {file_path}')
-                restored += 1
-        else:
-            os.remove(marker_path)
+
+    for ext in VB6_EXTENSIONS:
+        pattern = os.path.join(search_dir, '**', '*' + ext)
+        for file_path in glob.glob(pattern, recursive=True):
+            if is_utf8(file_path):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        text = f.read()
+                    text = text.replace('\r\n', '\n').replace('\n', '\r\n')
+                    with open(file_path, 'wb') as f:
+                        f.write(text.encode(enc))
+                    print(f'Restored: {file_path}')
+                    restored += 1
+                except Exception as e:
+                    print(f'ERROR: {file_path}: {e}', file=sys.stderr)
+
+    # Also clean up any leftover marker files
+    for marker in glob.glob(os.path.join(search_dir, '**', '*.__vb6_encoding_pending__'), recursive=True):
+        os.remove(marker)
 
     return restored
 

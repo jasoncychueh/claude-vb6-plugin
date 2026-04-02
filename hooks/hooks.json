@@ -1,5 +1,5 @@
 {
-  "description": "Big5 encoding protection hooks for VB6 source files (.bas, .cls, .frm, .rc). Transparent Big5↔UTF-8 conversion on Read/Edit/Write, with SessionEnd safety net and auto git hook install.",
+  "description": "VB6 encoding protection hooks. Transparent ANSI↔UTF-8 conversion on Read/Edit/Write. Files are only UTF-8 during tool execution, immediately restored after.",
   "hooks": {
     "SessionStart": [
       {
@@ -23,9 +23,29 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vb6_pre_edit.py",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vb6_post_read.py",
+            "timeout": 10
+          }
+        ]
+      },
       {
         "matcher": "Edit",
         "hooks": [
@@ -43,18 +63,6 @@
             "type": "command",
             "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vb6_post_write.py",
             "timeout": 10
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vb6_restore.py",
-            "timeout": 15
           }
         ]
       }

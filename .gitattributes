@@ -1,0 +1,12 @@
+*.bas eol=crlf
+*.cls eol=crlf
+*.frm eol=crlf
+*.frx binary
+*.vbp eol=crlf
+*.vbw eol=crlf
+*.rc  eol=crlf
+*.RES binary
+*.bat eol=crlf
+*.dll binary
+*.exe binary
+*.ocx binary
