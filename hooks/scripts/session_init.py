@@ -6,6 +6,9 @@ import os
 import shutil
 import subprocess
 
+sys.path.insert(0, os.path.dirname(__file__))
+from vb6_config import get_encoding
+
 
 def main():
     try:
@@ -82,10 +85,12 @@ def main():
                     pass
                 messages.append("Installed git pre-commit hook")
 
-    if messages:
-        print(json.dumps({
-            "systemMessage": "[vb6-plugin] " + "; ".join(messages)
-        }))
+    if not messages:
+        messages.append("Ready (encoding: " + get_encoding() + ")")
+
+    print(json.dumps({
+        "systemMessage": "[vb6-plugin] " + "; ".join(messages)
+    }))
 
 
 if __name__ == '__main__':
