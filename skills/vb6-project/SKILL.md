@@ -31,9 +31,11 @@ This plugin uses a **hook-based transparent conversion** system to make Read/Edi
  └─────────────┘       └──────────────┘       └──────────────┘
 ```
 
-1. **PreToolUse(Read)** — When a VB6 file is Read, the hook converts it from native encoding to UTF-8 on disk. A `.__vb6_encoding_pending__` marker file is created (containing the encoding name).
-2. **Edit/Write runs normally** — The file is now UTF-8, so Edit/Write can work normally. Claude Code displays its native diff UI.
-3. **PostToolUse(Edit/Write)** — After Edit or Write completes, the hook converts the file back to native encoding + CRLF and removes the marker.
+Each tool has both Pre and Post hooks — files are only UTF-8 during the brief moment of tool execution, immediately restored after:
+
+1. **Read**: PreToolUse converts ANSI→UTF-8 → Read executes → PostToolUse immediately restores UTF-8→ANSI
+2. **Edit**: PreToolUse converts ANSI→UTF-8 → Edit executes (shows native diff UI) → PostToolUse immediately restores UTF-8→ANSI
+3. **Write**: Write creates file in UTF-8 → PostToolUse converts UTF-8→ANSI + CRLF
 
 ### Encoding configuration
 
@@ -59,15 +61,11 @@ The plugin's **SessionStart hook** (`session_init.py`) automatically creates the
 
 No manual setup is needed.
 
-### Safety nets for unconverted files
+### Safety nets
 
-If a file is Read but never Edited (marker left behind), three layers of protection ensure it gets restored:
-
-| Layer | Trigger | Mechanism |
-|-------|---------|-----------|
-| **SessionEnd hook** | Claude Code session ends | Scans for all `.__vb6_encoding_pending__` markers and restores |
-| **git pre-commit hook** | `git commit` | Blocks commit if pending files found, restores them first |
-| **compile.bat** | VB6 compilation | Restores all pending files before compiling |
+In case a Post hook fails, `vb6_restore.py` scans for VB6 files stuck in UTF-8 and restores them. Called by:
+- **git pre-commit hook** — blocks commit if UTF-8 VB6 files found
+- **compile.bat** — restores before compiling
 
 **Important:** Do not run VB6 IDE while Claude Code is editing VB6 files. The temporary UTF-8 state on disk would corrupt VB6 IDE's view of the files.
 
@@ -173,10 +171,12 @@ All paths relative to `${CLAUDE_PLUGIN_ROOT}`:
 
 - **`hooks/scripts/session_init.py`** — SessionStart: creates `.vb6-encoding`, `.gitattributes`, installs git hook
 - **`hooks/scripts/vb6_config.py`** — Shared config: reads `.vb6-encoding`, detects encoding
-- **`hooks/scripts/vb6_pre_read.py`** — PreToolUse(Read): ANSI→UTF-8 transparent conversion
-- **`hooks/scripts/vb6_post_edit.py`** — PostToolUse(Edit): UTF-8→ANSI+CRLF restore
+- **`hooks/scripts/vb6_pre_read.py`** — PreToolUse(Read): ANSI→UTF-8 before Read
+- **`hooks/scripts/vb6_post_read.py`** — PostToolUse(Read): immediately restore ANSI after Read
+- **`hooks/scripts/vb6_pre_edit.py`** — PreToolUse(Edit): ANSI→UTF-8 before Edit
+- **`hooks/scripts/vb6_post_edit.py`** — PostToolUse(Edit): immediately restore ANSI after Edit
 - **`hooks/scripts/vb6_post_write.py`** — PostToolUse(Write): UTF-8→ANSI+CRLF + .frm format auto-fix
-- **`hooks/scripts/vb6_restore.py`** — Shared restore logic for safety nets
+- **`hooks/scripts/vb6_restore.py`** — Safety net: scans for UTF-8 VB6 files and restores
 
 ### References
 
