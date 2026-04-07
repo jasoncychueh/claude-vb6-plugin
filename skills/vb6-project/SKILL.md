@@ -31,11 +31,10 @@ This plugin uses a **hook-based transparent conversion** system to make Read/Edi
  └─────────────┘       └──────────────┘       └──────────────┘
 ```
 
-Each tool has both Pre and Post hooks — files are only UTF-8 during the brief moment of tool execution, immediately restored after:
-
-1. **Read**: PreToolUse converts ANSI→UTF-8 → Read executes → PostToolUse immediately restores UTF-8→ANSI
-2. **Edit**: PreToolUse converts ANSI→UTF-8 → Edit executes (shows native diff UI) → PostToolUse immediately restores UTF-8→ANSI
-3. **Write**: Write creates file in UTF-8 → PostToolUse converts UTF-8→ANSI + CRLF
+1. **PreToolUse(Read)** — Converts ANSI→UTF-8 on disk so Read can display readable content. File stays UTF-8 until Edit restores it.
+2. **Edit runs normally** — File is UTF-8, so Edit can find/replace text. Claude Code displays native diff UI.
+3. **PostToolUse(Edit)** — Restores UTF-8→ANSI+CRLF after Edit completes.
+4. **PostToolUse(Write)** — Converts newly written files from UTF-8 to ANSI+CRLF. Also auto-fixes `.frm` format issues.
 
 ### Encoding configuration
 
@@ -63,7 +62,8 @@ No manual setup is needed.
 
 ### Safety nets
 
-In case a Post hook fails, `vb6_restore.py` scans for VB6 files stuck in UTF-8 and restores them. Called by:
+If a file is Read but never Edited (left in UTF-8), these safety nets restore it:
+- **SessionEnd hook** — restores all UTF-8 VB6 files when session ends
 - **git pre-commit hook** — blocks commit if UTF-8 VB6 files found
 - **compile.bat** — restores before compiling
 
@@ -171,12 +171,10 @@ All paths relative to `${CLAUDE_PLUGIN_ROOT}`:
 
 - **`hooks/scripts/session_init.py`** — SessionStart: creates `.vb6-encoding`, `.gitattributes`, installs git hook
 - **`hooks/scripts/vb6_config.py`** — Shared config: reads `.vb6-encoding`, detects encoding
-- **`hooks/scripts/vb6_pre_read.py`** — PreToolUse(Read): ANSI→UTF-8 before Read
-- **`hooks/scripts/vb6_post_read.py`** — PostToolUse(Read): immediately restore ANSI after Read
-- **`hooks/scripts/vb6_pre_edit.py`** — PreToolUse(Edit): ANSI→UTF-8 before Edit
-- **`hooks/scripts/vb6_post_edit.py`** — PostToolUse(Edit): immediately restore ANSI after Edit
+- **`hooks/scripts/vb6_pre_read.py`** — PreToolUse(Read): ANSI→UTF-8, file stays UTF-8 until Edit restores
+- **`hooks/scripts/vb6_post_edit.py`** — PostToolUse(Edit): UTF-8→ANSI+CRLF restore
 - **`hooks/scripts/vb6_post_write.py`** — PostToolUse(Write): UTF-8→ANSI+CRLF + .frm format auto-fix
-- **`hooks/scripts/vb6_restore.py`** — Safety net: scans for UTF-8 VB6 files and restores
+- **`hooks/scripts/vb6_restore.py`** — Safety net: SessionEnd + git pre-commit + compile.bat
 
 ### References
 
