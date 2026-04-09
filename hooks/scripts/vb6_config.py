@@ -63,6 +63,26 @@ def is_native_encoded(file_path):
             return False
 
 
+def is_plugin_enabled():
+    """Check if this plugin is enabled for the current project in Claude Code settings.
+    Reads enabledPlugins from .claude/settings.local.json and .claude/settings.json."""
+    root = get_project_root()
+    plugin_name = 'vb6-project@chipright-plugins'
+    for filename in ('settings.local.json', 'settings.json'):
+        settings_path = os.path.join(root, '.claude', filename)
+        if os.path.isfile(settings_path):
+            try:
+                import json
+                with open(settings_path, 'r') as f:
+                    data = json.load(f)
+                enabled = data.get('enabledPlugins', {})
+                if enabled.get(plugin_name) is True:
+                    return True
+            except Exception:
+                pass
+    return False
+
+
 def create_config_if_missing():
     """Create .vb6-encoding with default encoding if it doesn't exist.
     Returns (created: bool, path: str)."""

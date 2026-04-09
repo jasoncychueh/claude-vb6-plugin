@@ -7,7 +7,7 @@ import shutil
 import subprocess
 
 sys.path.insert(0, os.path.dirname(__file__))
-from vb6_config import get_encoding
+from vb6_config import get_encoding, is_plugin_enabled
 
 
 def main():
@@ -15,6 +15,9 @@ def main():
         sys.stdin.read()
     except:
         pass
+
+    if not is_plugin_enabled():
+        return
 
     messages = []
 

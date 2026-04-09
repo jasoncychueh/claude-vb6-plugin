@@ -6,7 +6,7 @@ import os
 import subprocess
 
 sys.path.insert(0, os.path.dirname(__file__))
-from vb6_config import get_encoding, is_vb6_file
+from vb6_config import get_encoding, is_vb6_file, is_plugin_enabled
 
 
 def is_utf8(file_path):
@@ -19,7 +19,7 @@ def is_utf8(file_path):
 
 def main():
     data = json.load(sys.stdin)
-    if data.get('tool_name') != 'Edit':
+    if data.get('tool_name') != 'Edit' or not is_plugin_enabled():
         return
 
     file_path = data.get('tool_input', {}).get('file_path', '')

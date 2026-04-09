@@ -1,6 +1,6 @@
 {
   "name": "vb6-project",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "ANSI encoding protection for VB6 projects. Transparent ANSI↔UTF-8 conversion via hooks on Read/Edit/Write tools, .frm format auto-fix, compile helpers. Files are only UTF-8 during tool execution, immediately restored after.",
   "author": {
     "name": "Jason Chueh",

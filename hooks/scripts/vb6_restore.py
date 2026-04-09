@@ -15,7 +15,7 @@ import glob
 import subprocess
 
 sys.path.insert(0, os.path.dirname(__file__))
-from vb6_config import get_encoding, VB6_EXTENSIONS
+from vb6_config import get_encoding, is_plugin_enabled, VB6_EXTENSIONS
 
 
 def is_utf8(file_path):
@@ -61,6 +61,9 @@ def main():
             sys.stdin.read()
         except:
             pass
+        # Called as Claude hook — check if plugin is enabled for this project
+        if not is_plugin_enabled():
+            return
 
     count = restore_all(search_dir)
     if count > 0:
